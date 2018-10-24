@@ -1,2 +1,6 @@
-# CSVtoBIN
-CSV parser written in C that takes bytes in CSV format and creates a binary file.
+# CSVtoP
+Perform Statistical t-Test with p-Values from two CSV files.
+
+Usage: csvtop <fileA.csv> <fileB.csv>
+
+To compile: make
