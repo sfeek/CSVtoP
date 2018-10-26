@@ -4,6 +4,12 @@
 #include <CSVLib.h>
 #include <math.h>
 
+struct pair  
+{ 
+  double min; 
+  double max; 
+};   
+  
 double avg(double *buffer, int count)
 {
 	int i;
@@ -173,6 +179,54 @@ double PValuePaired (double *ARRAY1, double *ARRAY2, const size_t ARRAY_SIZE)
 	return PfromT(WELCH_T_STATISTIC,DEGREES_OF_FREEDOM);
 }
 
+struct pair getMinMax(double arr[], int n) 
+{ 
+	struct pair minmax;      
+	int i;   
+  
+	if (n%2 == 0) 
+	{          
+		if (arr[0] > arr[1])      
+		{ 
+			minmax.max = arr[0]; 
+			minmax.min = arr[1]; 
+		}   
+		else
+    	{ 
+			minmax.min = arr[0]; 
+			minmax.max = arr[1]; 
+		} 
+    	i = 2; 
+	}   
+	else
+	{ 
+		minmax.min = arr[0]; 
+		minmax.max = arr[0]; 
+		i = 1;  
+	} 
+    
+	while (i < n-1)   
+	{           
+		if (arr[i] > arr[i+1])           
+		{ 
+			if(arr[i] > minmax.max)         
+			minmax.max = arr[i]; 
+			if(arr[i+1] < minmax.min)           
+			minmax.min = arr[i+1];         
+		}  
+		else         
+		{ 
+			if (arr[i+1] > minmax.max)         
+				minmax.max = arr[i+1]; 
+			if (arr[i] < minmax.min)           
+				minmax.min = arr[i];         
+		}         
+		i += 2;   
+	}             
+  
+	return minmax; 
+}   
+
 int main (int argc, char *argv[])
 {
 	char **parsed=NULL;
@@ -187,6 +241,8 @@ int main (int argc, char *argv[])
 	int countA=0,lastCountA=0;
 	int countB=0,lastCountB=0;
 	double p,avgA,avgB;
+	struct pair minmaxA;
+	struct pair minmaxB;
 
 	if (argc != 3)
 	{
@@ -281,13 +337,21 @@ int main (int argc, char *argv[])
 	/* Show the results */
 	avgA = avg (bufferA,lastCountA);
 	avgB = avg (bufferB,lastCountB);
+	minmaxA = getMinMax(bufferA,lastCountA);
+	minmaxB = getMinMax(bufferB,lastCountB);
+	
 
 	printf ("\nA Count = %d",lastCountA);
 	printf ("\nB Count = %d\n",lastCountB);
+	printf ("\nA Min = %f", minmaxA.min);
+	printf ("\nA Max = %f", minmaxA.max);
+	printf ("\nB Min = %f", minmaxB.min);
+	printf ("\nB Max = %f\n", minmaxB.max);
 	printf ("\nAVG A = %f ",avgA);
 	printf ("\nAVG B = %f \n",avgB);
 	printf ("\nSD A = %f ",SD(bufferA,lastCountA));
 	printf ("\nSD B = %f \n",SD(bufferB,lastCountB));
+
 
 	printf ("\n*** Unpaired ***");
 
@@ -308,7 +372,7 @@ int main (int argc, char *argv[])
 
 	if (lastCountA == lastCountB)
 	{
-		printf ("\n\n\n*** Paired ***");
+		printf ("\n\n*** Paired ***");
 		
 		p = PValuePaired(bufferA,bufferB,lastCountA);
 	
