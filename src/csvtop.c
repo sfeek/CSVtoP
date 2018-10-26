@@ -20,7 +20,7 @@ double avg(double *buffer, int count)
 	return total/count;
 }
 
-double SD(double *buffer, int count)
+double SDPop(double *buffer, int count)
 {
 	double mean, standardDeviation = 0.0;
 	int i;
@@ -30,6 +30,18 @@ double SD(double *buffer, int count)
 	for(i=0; i<count; ++i) standardDeviation += pow(buffer[i] - mean, 2);
 
 	return sqrt(standardDeviation/count);
+}
+
+double SDSamp(double *buffer, int count)
+{
+	double mean, standardDeviation = 0.0;
+	int i;
+
+	mean = avg(buffer,count);
+
+	for(i=0; i<count; ++i) standardDeviation += pow(buffer[i] - mean, 2);
+
+	return sqrt(standardDeviation/(count-1));
 }
 
 double PfromT (const double WELCH_T_STATISTIC, const double DEGREES_OF_FREEDOM)
@@ -170,7 +182,7 @@ double PValuePaired (double *ARRAY1, double *ARRAY2, const size_t ARRAY_SIZE)
 
 	mean = avg(ABdiff,ARRAY_SIZE);
 
-	std = SD(ABdiff,ARRAY_SIZE);
+	std = SDPop(ABdiff,ARRAY_SIZE);
 
 	WELCH_T_STATISTIC = mean/(std/sqrt(ARRAY_SIZE-1));
 
@@ -349,8 +361,11 @@ int main (int argc, char *argv[])
 	printf ("\nB Max = %f\n", minmaxB.max);
 	printf ("\nAVG A = %f ",avgA);
 	printf ("\nAVG B = %f \n",avgB);
-	printf ("\nSD A = %f ",SD(bufferA,lastCountA));
-	printf ("\nSD B = %f \n",SD(bufferB,lastCountB));
+	printf ("\nSD Pop A = %f ",SDPop(bufferA,lastCountA));
+	printf ("\nSD Pop B = %f \n",SDPop(bufferB,lastCountB));
+	printf ("\nSD Samp A = %f ",SDSamp(bufferA,lastCountA));
+	printf ("\nSD Samp B = %f \n",SDSamp(bufferB,lastCountB));
+
 
 
 	printf ("\n*** Unpaired ***");
