@@ -4,6 +4,12 @@
 #include <CSVLib.h>
 #include <math.h>
 
+
+
+#define MAXLOG 7.09782712893383996732E2
+double erf_local(double x);
+double erfc_local(double a);
+
 struct pair  
 { 
   double min; 
@@ -44,6 +50,29 @@ double SDSamp(double *buffer, int count)
 	return sqrt(standardDeviation/(count-1));
 }
 
+int RemoveOutliers (double *in, double **out, int n, double sensitivity)
+{
+	int c = 0;
+	int i;
+	double test;
+	double a = avg (in,n);
+	double std = SDSamp (in,n);
+
+	*out = malloc(n * sizeof (double));
+	if (*out == NULL) return 0;
+
+	for (i = 0;i < n; i++)
+	{
+		test = n * erfc(fabs(in[i] - a) / std);
+		if (test < sensitivity) 
+			printf ("\nThrew out #%d -> %.6g",i+1,in[i]);
+		else
+			(*out)[c++] = in[i];
+	}
+	
+	return c;  
+}
+
 double PfromT (const double WELCH_T_STATISTIC, const double DEGREES_OF_FREEDOM)
 { 	
 	const double a = DEGREES_OF_FREEDOM/2;
@@ -51,8 +80,8 @@ double PfromT (const double WELCH_T_STATISTIC, const double DEGREES_OF_FREEDOM)
 	
 	if ((isinf(value) != 0) || (isnan(value) != 0)) return 1.0;
 
-	printf ("\nT = %f",WELCH_T_STATISTIC);
-	printf ("\ndf = %f\n",DEGREES_OF_FREEDOM);
+	printf ("\nT = %.6g",WELCH_T_STATISTIC);
+	printf ("\ndf = %.6g\n",DEGREES_OF_FREEDOM);
 
 	const double beta = lgammal(a)+0.57236494292470009-lgammal(a+0.5);
 	const double acu = 0.1E-14;
@@ -250,6 +279,8 @@ int main (int argc, char *argv[])
 	ssize_t read;
 	double *bufferA=NULL;
 	double *bufferB=NULL;
+	double *bufferAO=NULL;
+	double *bufferBO=NULL;
 	int countA=0,lastCountA=0;
 	int countB=0,lastCountB=0;
 	double p,avgA,avgB;
@@ -352,65 +383,115 @@ int main (int argc, char *argv[])
 	minmaxA = getMinMax(bufferA,lastCountA);
 	minmaxB = getMinMax(bufferB,lastCountB);
 	
+	printf ("\n\n *** Raw Data  ***");
 
-	printf ("\nA Count = %d",lastCountA);
+	printf ("\n\nA Count = %d",lastCountA);
 	printf ("\nB Count = %d\n",lastCountB);
-	printf ("\nA Min = %f", minmaxA.min);
-	printf ("\nA Max = %f", minmaxA.max);
-	printf ("\nB Min = %f", minmaxB.min);
-	printf ("\nB Max = %f\n", minmaxB.max);
-	printf ("\nAVG A = %f ",avgA);
-	printf ("\nAVG B = %f \n",avgB);
-	printf ("\nSD Pop A = %f ",SDPop(bufferA,lastCountA));
-	printf ("\nSD Pop B = %f \n",SDPop(bufferB,lastCountB));
-	printf ("\nSD Samp A = %f ",SDSamp(bufferA,lastCountA));
-	printf ("\nSD Samp B = %f \n",SDSamp(bufferB,lastCountB));
+	printf ("\nA Min = %.6g", minmaxA.min);
+	printf ("\nA Max = %.6g", minmaxA.max);
+	printf ("\nB Min = %.6g", minmaxB.min);
+	printf ("\nB Max = %.6g\n", minmaxB.max);
+	printf ("\nAVG A = %.6g ",avgA);
+	printf ("\nAVG B = %.6g \n",avgB);
+	printf ("\nSD A = %.6g ",SDSamp(bufferA,lastCountA));
+	printf ("\nSD B = %.6g \n",SDSamp(bufferB,lastCountB));
 
 
 
-	printf ("\n*** Unpaired ***");
+	printf ("\n*** Welch t-test Unpaired ***");
 
 	p = PValueUnpaired (bufferA,lastCountA,bufferB,lastCountB);
 
-	printf ("\nP-Value Two Sided = %f ",p);
+	printf ("\nP-Value Two Sided = %.6g ",p);
 
 	if (avgA <= avgB)
 	{
-		printf ("\nP-Value One Sided A < B = %f ", 0.5*p);
-		printf ("\nP-Value One Sided A > B = %f ", 1 - 0.5*p);
+		printf ("\nP-Value One Sided A < B = %.6g ", 0.5*p);
+		printf ("\nP-Value One Sided A > B = %.6g ", 1 - 0.5*p);
 	}
 	else
 	{
-		printf ("\nP-Value One Sided A < B = %f ", 1 - 0.5*p);
-		printf ("\nP-Value One Sided A > B = %f ", 0.5*p);
+		printf ("\nP-Value One Sided A < B = %.6g ", 1 - 0.5*p);
+		printf ("\nP-Value One Sided A > B = %.6g ", 0.5*p);
 	}
 
 	if (lastCountA == lastCountB)
 	{
-		printf ("\n\n*** Paired ***");
+		printf ("\n\n*** Welch t-test Paired ***");
 		
 		p = PValuePaired(bufferA,bufferB,lastCountA);
 	
-		printf ("\nP-Value Two Sided = %f ",p);
+		printf ("\nP-Value Two Sided = %.6g ",p);
 
 		if (avgA <= avgB)
 		{
-			printf ("\nP-Value One Sided A < B = %f ", 0.5*p);
-			printf ("\nP-Value One Sided A > B = %f ", 1 - 0.5*p);
+			printf ("\nP-Value One Sided A < B = %.6g ", 0.5*p);
+			printf ("\nP-Value One Sided A > B = %.6g ", 1 - 0.5*p);
 		}
 		else
 		{
-			printf ("\nP-Value One Sided A < B = %f ", 1 - 0.5*p);
-			printf ("\nP-Value One Sided A > B = %f ", 0.5*p);
+			printf ("\nP-Value One Sided A < B = %.6g ", 1 - 0.5*p);
+			printf ("\nP-Value One Sided A > B = %.6g ", 0.5*p);
 		}
 	}
-		
+	
+	printf ("\n\n\n *** Chauvenets Criterion Outlier Removal ***");
+
+	printf ("\n\nRemoving Outliers from A");
+	lastCountA = RemoveOutliers (bufferA,&bufferAO,lastCountA,0.5);
+	
+	printf ("\n\nRemoving Outliers from B");
+	lastCountB = RemoveOutliers (bufferB,&bufferBO,lastCountB,0.5);
+	
+	/* Show the results */
+	avgA = avg (bufferAO,lastCountA);
+	avgB = avg (bufferBO,lastCountB);
+	minmaxA = getMinMax(bufferAO,lastCountA);
+	minmaxB = getMinMax(bufferBO,lastCountB);
+	
+
+	printf ("\n\nA Count = %d",lastCountA);
+	printf ("\nB Count = %d\n",lastCountB);
+	printf ("\nA Min = %.6g", minmaxA.min);
+	printf ("\nA Max = %.6g", minmaxA.max);
+	printf ("\nB Min = %.6g", minmaxB.min);
+	printf ("\nB Max = %.6g\n", minmaxB.max);
+	printf ("\nAVG A = %.6g ",avgA);
+	printf ("\nAVG B = %.6g \n",avgB);
+	printf ("\nSD A = %.6g ",SDSamp(bufferA,lastCountA));
+	printf ("\nSD B = %.6g \n",SDSamp(bufferB,lastCountB));
+
+
+
+	printf ("\n*** Welch t-test Unpaired ***");
+
+	p = PValueUnpaired (bufferAO,lastCountA,bufferBO,lastCountB);
+
+	printf ("\nP-Value Two Sided = %.6g ",p);
+
+	if (avgA <= avgB)
+	{
+		printf ("\nP-Value One Sided A < B = %.6g ", 0.5*p);
+		printf ("\nP-Value One Sided A > B = %.6g ", 1 - 0.5*p);
+	}
+	else
+	{
+		printf ("\nP-Value One Sided A < B = %.6g ", 1 - 0.5*p);
+		printf ("\nP-Value One Sided A > B = %.6g ", 0.5*p);
+	}
+
 	/* Clean up after ourselves */
 	free (bufferA);
 	bufferA = NULL;
 
 	free (bufferB);
 	bufferB =  NULL;
+
+	free (bufferAO);
+	bufferAO = NULL;
+
+	free (bufferBO);
+	bufferBO = NULL;
 
 	printf ("\n\n");
 
