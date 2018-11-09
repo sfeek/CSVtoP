@@ -4,9 +4,8 @@
 #include <CSVLib.h>
 #include <math.h>
 
-
-
 #define MAXLOG 7.09782712893383996732E2
+
 double erf_local(double x);
 double erfc_local(double a);
 
@@ -73,15 +72,15 @@ int RemoveOutliers (double *in, double **out, int n, double sensitivity)
 	return c;  
 }
 
-double PfromT (const double WELCH_T_STATISTIC, const double DEGREES_OF_FREEDOM)
+double PfromT (const double welch_t_statistic, const double dof)
 { 	
-	const double a = DEGREES_OF_FREEDOM/2;
-	double value = DEGREES_OF_FREEDOM/(WELCH_T_STATISTIC*WELCH_T_STATISTIC+DEGREES_OF_FREEDOM);
+	const double a = dof/2;
+	double value = dof/(welch_t_statistic*welch_t_statistic+dof);
 	
 	if ((isinf(value) != 0) || (isnan(value) != 0)) return 1.0;
 
-	printf ("\nT = %.6g",WELCH_T_STATISTIC);
-	printf ("\ndf = %.6g\n",DEGREES_OF_FREEDOM);
+	printf ("\nT = %.6g",welch_t_statistic);
+	printf ("\ndf = %.6g\n",dof);
 
 	const double beta = lgammal(a)+0.57236494292470009-lgammal(a+0.5);
 	const double acu = 0.1E-14;
@@ -161,63 +160,63 @@ double PfromT (const double WELCH_T_STATISTIC, const double DEGREES_OF_FREEDOM)
   	return value;
 }
 
-double PValueUnpaired (double *ARRAY1, const size_t ARRAY1_SIZE, double *ARRAY2, const size_t ARRAY2_SIZE) 
+double PValueUnpaired (double *array1, const size_t array1_size, double *array2, const size_t array2_size) 
 {
-	if (ARRAY1_SIZE <= 1) return 1.0;
-	if (ARRAY2_SIZE <= 1) return 1.0;
+	if (array1_size <= 1) return 1.0;
+	if (array2_size <= 1) return 1.0;
 	
 	double fmean1 = 0.0, fmean2 = 0.0;
 	
-	fmean1 = avg(ARRAY1,ARRAY1_SIZE);
-	fmean2 = avg(ARRAY2,ARRAY2_SIZE);
+	fmean1 = avg(array1,array1_size);
+	fmean2 = avg(array2,array2_size);
 	
 	if (fmean1 == fmean2) return 1.0;
 
-	double unbiased_sample_variance1 = 0.0, unbiased_sample_variance2 = 0.0;
+	double usv1 = 0.0, usv2 = 0.0;
 
-	for (size_t x = 0; x < ARRAY1_SIZE; x++) 
+	for (size_t x = 0; x < array1_size; x++) 
 	{
-		unbiased_sample_variance1 += (ARRAY1[x]-fmean1)*(ARRAY1[x]-fmean1);
+		usv1 += (array1[x]-fmean1)*(array1[x]-fmean1);
 	}
 
-	for (size_t x = 0; x < ARRAY2_SIZE; x++) 
+	for (size_t x = 0; x < array2_size; x++) 
 	{
-		unbiased_sample_variance2 += (ARRAY2[x]-fmean2)*(ARRAY2[x]-fmean2);
+		usv2 += (array2[x]-fmean2)*(array2[x]-fmean2);
 	}
 	
-	unbiased_sample_variance1 = unbiased_sample_variance1/(ARRAY1_SIZE-1);
-	unbiased_sample_variance2 = unbiased_sample_variance2/(ARRAY2_SIZE-1);
+	usv1 = usv1/(array1_size-1);
+	usv2 = usv2/(array2_size-1);
 
-	const double WELCH_T_STATISTIC = (fmean1-fmean2)/sqrt(unbiased_sample_variance1/ARRAY1_SIZE+unbiased_sample_variance2/ARRAY2_SIZE);
-	const double DEGREES_OF_FREEDOM = pow((unbiased_sample_variance1/ARRAY1_SIZE+unbiased_sample_variance2/ARRAY2_SIZE),2.0)/((unbiased_sample_variance1*unbiased_sample_variance1)/(ARRAY1_SIZE*ARRAY1_SIZE*(ARRAY1_SIZE-1))+(unbiased_sample_variance2*unbiased_sample_variance2)/(ARRAY2_SIZE*ARRAY2_SIZE*(ARRAY2_SIZE-1)));
+	const double welch_t_statistic = (fmean1-fmean2)/sqrt(usv1/array1_size+usv2/array2_size);
+	const double dof = pow((usv1/array1_size+usv2/array2_size),2.0)/((usv1*usv1)/(array1_size*array1_size*(array1_size-1))+(usv2*usv2)/(array2_size*array2_size*(array2_size-1)));
 
-	return PfromT(WELCH_T_STATISTIC,DEGREES_OF_FREEDOM);
+	return PfromT(welch_t_statistic,dof);
 }
 
-double PValuePaired (double *ARRAY1, double *ARRAY2, const size_t ARRAY_SIZE) 
+double PValuePaired (double *array1, double *array2, const size_t array_size) 
 {
 	double *ABdiff = NULL;
 	double mean;
 	double std;
-	double WELCH_T_STATISTIC;
-	double DEGREES_OF_FREEDOM = ARRAY_SIZE - 1;
+	double welch_t_statistic;
+	double dof = array_size - 1;
 
 	int i;
 	
-	ABdiff = malloc (ARRAY_SIZE * sizeof(double)); 
+	ABdiff = malloc (array_size * sizeof(double)); 
 	if (ABdiff == NULL) exit (EXIT_FAILURE);
 
-	for (i=0;i<ARRAY_SIZE;i++) ABdiff[i] = ARRAY1[i] - ARRAY2[i];
+	for (i=0;i<array_size;i++) ABdiff[i] = array1[i] - array2[i];
 
-	mean = avg(ABdiff,ARRAY_SIZE);
+	mean = avg(ABdiff,array_size);
 
-	std = SDPop(ABdiff,ARRAY_SIZE);
+	std = SDPop(ABdiff,array_size);
 
-	WELCH_T_STATISTIC = mean/(std/sqrt(ARRAY_SIZE-1));
+	welch_t_statistic = mean/(std/sqrt(array_size-1));
 
 	free (ABdiff);
 
-	return PfromT(WELCH_T_STATISTIC,DEGREES_OF_FREEDOM);
+	return PfromT(welch_t_statistic,dof);
 }
 
 struct pair getMinMax(double arr[], int n) 
