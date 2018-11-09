@@ -6,9 +6,6 @@
 
 #define MAXLOG 7.09782712893383996732E2
 
-double erf_local(double x);
-double erfc_local(double a);
-
 struct pair  
 { 
   double min; 
