@@ -310,6 +310,12 @@ int main (int argc, char *argv[])
 
 	/* get Confidence level */
 	clevel = atof(argv[1]);
+	
+	if (clevel <= 0.0 || clevel >= 1.0) 
+	{
+		printf ("\n\nConfidence Level Out of Bounds (0.0 < C < 1.0)\n\n");
+		exit (EXIT_FAILURE);
+	}
 
 	/* Read in A array */
 	/* Open the files */
@@ -402,7 +408,8 @@ int main (int argc, char *argv[])
 	minmaxB = getMinMax(bufferB,lastCountB);
 	SDA = SDSamp(bufferA,lastCountA);
 	SDB = SDSamp(bufferB,lastCountB);
-	
+
+	printf ("\n\n\n%sP-Value criteria for FALSE null hypothesis < %s%.6g",KCYN,KYEL,clevel);	
 	printf ("\n\n%s *** Raw Data ***",KRED);
 
 	printf ("\n\n%sA Count = %s%d",KGRN,KYEL,lastCountA);
