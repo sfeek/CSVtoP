@@ -304,7 +304,7 @@ int main (int argc, char *argv[])
 
 	if (argc != 4)
 	{
-		printf ("\n\n Usage: csvtop <confidence level> <fname A.csv> <fname B>.csv\n");
+		printf ("\n\n Usage: csvtop <confidence_level> <fname A.csv> <fname B>.csv\n");
 		exit (EXIT_FAILURE);
 	}
 
