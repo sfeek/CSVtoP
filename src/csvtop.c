@@ -298,19 +298,22 @@ int main (int argc, char *argv[])
 	double *bufferBO=NULL;
 	int countA=0,lastCountA=0;
 	int countB=0,lastCountB=0;
-	double p,avgA,avgB,SDA,SDB;
+	double p,avgA,avgB,SDA,SDB,clevel;
 	struct pair minmaxA;
 	struct pair minmaxB;
 
-	if (argc != 3)
+	if (argc != 4)
 	{
-		printf ("\n\n Usage: csvtop <fname A.csv> <fname B>.csv\n");
+		printf ("\n\n Usage: csvtop <confidence level> <fname A.csv> <fname B>.csv\n");
 		exit (EXIT_FAILURE);
 	}
 
+	/* get Confidence level */
+	clevel = atof(argv[1]);
+
 	/* Read in A array */
 	/* Open the files */
-	in = fopen (argv[1], "r");
+	in = fopen (argv[2], "r");
 
 	if (in == NULL)
 		exit (EXIT_FAILURE);
@@ -352,7 +355,7 @@ int main (int argc, char *argv[])
 
 	/* Read in B array */
 	/* Open the files */
-	in = fopen (argv[2], "r");
+	in = fopen (argv[3], "r");
 
 	if (in == NULL)
 		exit (EXIT_FAILURE);
@@ -400,7 +403,7 @@ int main (int argc, char *argv[])
 	SDA = SDSamp(bufferA,lastCountA);
 	SDB = SDSamp(bufferB,lastCountB);
 	
-	printf ("\n\n%s *** Raw ***",KRED);
+	printf ("\n\n%s *** Raw Data ***",KRED);
 
 	printf ("\n\n%sA Count = %s%d",KGRN,KYEL,lastCountA);
 	printf ("\n%sB Count = %s%d\n",KGRN,KYEL,lastCountB);
@@ -433,44 +436,70 @@ int main (int argc, char *argv[])
 		printf ("\n%sSD %% Change = %s-%.2g%%",KGRN,KYEL,PerDiff(SDA,SDB));
 	}
 
-	printf ("\n\n%s*** Welch t-test Unpaired ***",KBLU);
+	printf ("\n\n\n%s*** Welch t-test Unpaired ***",KBLU);
 
 	p = PValueUnpaired (bufferA,lastCountA,bufferB,lastCountB);
 
-	printf ("\n%sP-Value Two Sided = %s%.6g ",KGRN,KYEL,p);
+	if (p <= clevel) 
+		printf ("\n%sNull Hypothesis is %sFALSE%s for Two Sided test",KGRN,KCYN,KGRN);
+	else
+		printf ("\n%sNull Hypothesis is %sTRUE%s for Two Sided test",KGRN,KCYN,KGRN);
 
-	if (avgA <= avgB)
+	printf ("\n%sP-Value Two Sided = %s%.6g \n",KGRN,KYEL,p);
+
+	if (avgA < avgB)
 	{
+		if (0.5*p <= clevel) 
+			printf ("\n%sNull Hypothesis is %sFALSE%s for One Sided test",KGRN,KCYN,KGRN);
+		else
+			printf ("\n%sNull Hypothesis is %sTRUE%s for One Sided test",KGRN,KCYN,KGRN);
+
 		printf ("\n%sP-Value One Sided A < B = %s%.6g ",KGRN,KYEL, 0.5*p);
-		printf ("\n%sP-Value One Sided A > B = %s%.6g ",KGRN,KYEL, 1 - 0.5*p);
 	}
 	else
 	{
-		printf ("\n%sP-Value One Sided A < B = %s%.6g ",KGRN,KYEL, 1 - 0.5*p);
+		if (0.5*p <= clevel) 
+			printf ("\n%sNull Hypothesis is %sFALSE%s for One Sided test",KGRN,KCYN,KGRN);
+		else
+			printf ("\n%sNull Hypothesis is %sTRUE%s for One Sided test",KGRN,KCYN,KGRN);
+
 		printf ("\n%sP-Value One Sided A > B = %s%.6g ",KGRN,KYEL, 0.5*p);
 	}
 
 	if (lastCountA == lastCountB)
 	{
-		printf ("\n\n%s*** Welch t-test Paired ***", KBLU);
+		printf ("\n\n\n%s*** Welch t-test Paired ***", KBLU);
 		
 		p = PValuePaired(bufferA,bufferB,lastCountA);
 	
-		printf ("\n%sP-Value Two Sided = %s%.6g ",KGRN,KYEL,p);
+		if (p <= clevel) 
+			printf ("\n%sNull Hypothesis is %sFALSE%s for Two Sided test",KGRN,KCYN,KGRN);
+		else
+			printf ("\n%sNull Hypothesis is %sTRUE%s for Two Sided test",KGRN,KCYN,KGRN);
 
-		if (avgA <= avgB)
+		printf ("\n%sP-Value Two Sided = %s%.6g \n",KGRN,KYEL,p);
+
+		if (avgA < avgB)
 		{
+			if (0.5*p <= clevel) 
+				printf ("\n%sNull Hypothesis is %sFALSE%s for One Sided test",KGRN,KCYN,KGRN);
+			else
+				printf ("\n%sNull Hypothesis is %sTRUE%s for One Sided test",KGRN,KCYN,KGRN);
+
 			printf ("\n%sP-Value One Sided A < B = %s%.6g ",KGRN,KYEL, 0.5*p);
-			printf ("\n%sP-Value One Sided A > B = %s%.6g ",KGRN,KYEL, 1 - 0.5*p);
 		}
 		else
 		{
-			printf ("\n%sP-Value One Sided A < B = %s%.6g ",KGRN,KYEL, 1 - 0.5*p);
+			if (0.5*p <= clevel) 
+				printf ("\n%sNull Hypothesis is %sFALSE%s for One Sided test",KGRN,KCYN,KGRN);
+			else
+				printf ("\n%sNull Hypothesis is %sTRUE%s for One Sided test",KGRN,KCYN,KGRN);
+
 			printf ("\n%sP-Value One Sided A > B = %s%.6g ",KGRN,KYEL, 0.5*p);
 		}
 	}
 	
-	printf ("\n\n\n\n%s *** Chauvenets Criterion Outlier Removal ***",KRED);
+	printf ("\n\n\n\n%s *** Data after Chauvenets Criterion Outlier Removal Filter ***",KRED);
 
 	printf ("\n\n%sRemoving Outliers from %sA",KMAG,KYEL);
 	lastCountA = RemoveOutliers (bufferA,&bufferAO,lastCountA,0.5);
@@ -518,22 +547,36 @@ int main (int argc, char *argv[])
 	}
 
 
-	printf ("\n\n%s*** Welch t-test Unpaired ***",KBLU);
+	printf ("\n\n\n%s*** Welch t-test Unpaired ***",KBLU);
 
 	p = PValueUnpaired (bufferAO,lastCountA,bufferBO,lastCountB);
 
-	printf ("\n%sP-Value Two Sided = %s%.6g ",KGRN,KYEL,p);
+	if (p <= clevel) 
+		printf ("\n%sNull Hypothesis is %sFALSE%s for Two Sided test",KGRN,KCYN,KGRN);
+	else
+		printf ("\n%sNull Hypothesis is %sTRUE%s for Two Sided test",KGRN,KCYN,KGRN);
 
-	if (avgA <= avgB)
+	printf ("\n%sP-Value Two Sided = %s%.6g \n",KGRN,KYEL,p);
+
+	if (avgA < avgB)
 	{
+		if (0.5*p <= clevel) 
+			printf ("\n%sNull Hypothesis is %sFALSE%s for One Sided test",KGRN,KCYN,KGRN);
+		else
+			printf ("\n%sNull Hypothesis is %sTRUE%s for One Sided test",KGRN,KCYN,KGRN);
+
 		printf ("\n%sP-Value One Sided A < B = %s%.6g ",KGRN,KYEL, 0.5*p);
-		printf ("\n%sP-Value One Sided A > B = %s%.6g ",KGRN,KYEL, 1 - 0.5*p);
 	}
 	else
 	{
-		printf ("\n%sP-Value One Sided A < B = %s%.6g ",KGRN,KYEL, 1 - 0.5*p);
+		if (0.5*p <= clevel) 
+			printf ("\n%sNull Hypothesis is %sFALSE%s for One Sided test",KGRN,KCYN,KGRN);
+		else
+			printf ("\n%sNull Hypothesis is %sTRUE%s for One Sided test",KGRN,KCYN,KGRN);
+
 		printf ("\n%sP-Value One Sided A > B = %s%.6g ",KGRN,KYEL, 0.5*p);
 	}
+
 
 
 	/* Clean up after ourselves */
