@@ -410,14 +410,28 @@ int main (int argc, char *argv[])
 	printf ("\n%sB Max = %s%.6g\n",KGRN,KYEL,minmaxB.max);
 	printf ("\n%sAVG A = %s%.6g",KGRN,KYEL,avgA);
 	printf ("\n%sAVG B = %s%.6g",KGRN,KYEL,avgB);
-	printf ("\n%sAVG %% Change = %s%.2g%%",KGRN,KYEL,PerDiff(avgA,avgB));
-	if (avgA < avgB) printf (" increase");
-	if (avgA > avgB) printf (" decrease");
+	if (avgA < avgB) 
+	{	
+		printf ("\n%sAVG Difference = %s+%.6g",KGRN,KYEL,fabs(avgB-avgA));
+		printf ("\n%sAVG %% Change = %s+%.2g%%",KGRN,KYEL,PerDiff(avgA,avgB));
+	}
+	if (avgA > avgB) 
+	{
+		printf ("\n%sAVG Difference = %s-%.6g",KGRN,KYEL,fabs(avgB-avgA));
+		printf ("\n%sAVG %% Change = %s-%.2g%%",KGRN,KYEL,PerDiff(avgA,avgB));
+	}
 	printf ("\n\n%sSD A = %s%.6g",KGRN,KYEL,SDA);
 	printf ("\n%sSD B = %s%.6g",KGRN,KYEL,SDB);
-	printf ("\n%sSD %% Change = %s%.2g%%",KGRN,KYEL,PerDiff(SDA,SDB));
-	if (SDA < SDB) printf (" increase");
-	if (SDA > SDB) printf (" decrease");
+	if (SDA < SDB) 
+	{
+		printf ("\n%sSD Difference = %s+%.6g",KGRN,KYEL,fabs(SDB-SDA));
+		printf ("\n%sSD %% Change = %s+%.2g%%",KGRN,KYEL,PerDiff(SDA,SDB));
+	}
+	if (SDA > SDB) 
+	{
+		printf ("\n%sSD Difference = %s-%.6g",KGRN,KYEL,fabs(SDB-SDA));
+		printf ("\n%sSD %% Change = %s-%.2g%%",KGRN,KYEL,PerDiff(SDA,SDB));
+	}
 
 	printf ("\n\n%s*** Welch t-test Unpaired ***",KBLU);
 
@@ -480,14 +494,29 @@ int main (int argc, char *argv[])
 	printf ("\n%sB Max = %s%.6g\n",KGRN,KYEL,minmaxB.max);
 	printf ("\n%sAVG A = %s%.6g",KGRN,KYEL,avgA);
 	printf ("\n%sAVG B = %s%.6g",KGRN,KYEL,avgB);
-	printf ("\n%sAVG %% Change = %s%.2g%%",KGRN,KYEL,PerDiff(avgA,avgB));
-	if (avgA < avgB) printf (" increase");
-	if (avgA > avgB) printf (" decrease");
+	if (avgA < avgB) 
+	{	
+		printf ("\n%sAVG Difference = %s+%.6g",KGRN,KYEL,fabs(avgB-avgA));
+		printf ("\n%sAVG %% Change = %s+%.2g%%",KGRN,KYEL,PerDiff(avgA,avgB));
+	}
+	if (avgA > avgB) 
+	{
+		printf ("\n%sAVG Difference = %s-%.6g",KGRN,KYEL,fabs(avgB-avgA));
+		printf ("\n%sAVG %% Change = %s-%.2g%%",KGRN,KYEL,PerDiff(avgA,avgB));
+	}
 	printf ("\n\n%sSD A = %s%.6g",KGRN,KYEL,SDA);
 	printf ("\n%sSD B = %s%.6g",KGRN,KYEL,SDB);
-	printf ("\n%sSD %% Change = %s%.2g%%",KGRN,KYEL,PerDiff(SDA,SDB));
-	if (SDA < SDB) printf (" increase");
-	if (SDA > SDB) printf (" decrease");
+	if (SDA < SDB) 
+	{
+		printf ("\n%sSD Difference = %s+%.6g",KGRN,KYEL,fabs(SDB-SDA));
+		printf ("\n%sSD %% Change = %s+%.2g%%",KGRN,KYEL,PerDiff(SDA,SDB));
+	}
+	if (SDA > SDB) 
+	{
+		printf ("\n%sSD Difference = %s-%.6g",KGRN,KYEL,fabs(SDB-SDA));
+		printf ("\n%sSD %% Change = %s-%.2g%%",KGRN,KYEL,PerDiff(SDA,SDB));
+	}
+
 
 	printf ("\n\n%s*** Welch t-test Unpaired ***",KBLU);
 
