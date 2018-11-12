@@ -6,12 +6,31 @@
 
 #define MAXLOG 7.09782712893383996732E2
 
+#define KNRM  "\x1B[0m"
+#define KRED  "\x1B[31m"
+#define KGRN  "\x1B[32m"
+#define KYEL  "\x1B[33m"
+#define KBLU  "\x1B[34m"
+#define KMAG  "\x1B[35m"
+#define KCYN  "\x1B[36m"
+#define KWHT  "\x1B[37m"
+
 struct pair  
 { 
   double min; 
   double max; 
 };   
-  
+
+double PerDiff (double f, double s)
+{
+	if (f == s) return 0.0;
+
+	if (f < s)
+		return (s-f)/f * 100.0;
+	else
+		return (f-s)/f * 100.0;
+}
+
 double avg(double *buffer, int count)
 {
 	int i;
@@ -61,7 +80,7 @@ int RemoveOutliers (double *in, double **out, int n, double sensitivity)
 	{
 		test = n * erfc(fabs(in[i] - a) / std);
 		if (test < sensitivity) 
-			printf ("\nThrew out #%d -> %.6g",i+1,in[i]);
+			printf ("\n%sThrew out #%d -> %s%.6g",KGRN,i+1,KYEL,in[i]);
 		else
 			(*out)[c++] = in[i];
 	}
@@ -76,8 +95,8 @@ double PfromT (const double welch_t_statistic, const double dof)
 	
 	if ((isinf(value) != 0) || (isnan(value) != 0)) return 1.0;
 
-	printf ("\nT = %.6g",welch_t_statistic);
-	printf ("\ndf = %.6g\n",dof);
+	printf ("\n%sT = %s%.6g",KGRN,KYEL,welch_t_statistic);
+	printf ("\n%sdf = %s%.6g\n",KGRN,KYEL,dof);
 
 	const double beta = lgammal(a)+0.57236494292470009-lgammal(a+0.5);
 	const double acu = 0.1E-14;
@@ -279,7 +298,7 @@ int main (int argc, char *argv[])
 	double *bufferBO=NULL;
 	int countA=0,lastCountA=0;
 	int countB=0,lastCountB=0;
-	double p,avgA,avgB;
+	double p,avgA,avgB,SDA,SDB;
 	struct pair minmaxA;
 	struct pair minmaxB;
 
@@ -378,65 +397,71 @@ int main (int argc, char *argv[])
 	avgB = avg (bufferB,lastCountB);
 	minmaxA = getMinMax(bufferA,lastCountA);
 	minmaxB = getMinMax(bufferB,lastCountB);
+	SDA = SDSamp(bufferA,lastCountA);
+	SDB = SDSamp(bufferB,lastCountB);
 	
-	printf ("\n\n *** Raw Data  ***");
+	printf ("\n\n%s *** Raw ***",KRED);
 
-	printf ("\n\nA Count = %d",lastCountA);
-	printf ("\nB Count = %d\n",lastCountB);
-	printf ("\nA Min = %.6g", minmaxA.min);
-	printf ("\nA Max = %.6g", minmaxA.max);
-	printf ("\nB Min = %.6g", minmaxB.min);
-	printf ("\nB Max = %.6g\n", minmaxB.max);
-	printf ("\nAVG A = %.6g ",avgA);
-	printf ("\nAVG B = %.6g \n",avgB);
-	printf ("\nSD A = %.6g ",SDSamp(bufferA,lastCountA));
-	printf ("\nSD B = %.6g \n",SDSamp(bufferB,lastCountB));
+	printf ("\n\n%sA Count = %s%d",KGRN,KYEL,lastCountA);
+	printf ("\n%sB Count = %s%d\n",KGRN,KYEL,lastCountB);
+	printf ("\n%sA Min = %s%.6g",KGRN,KYEL,minmaxA.min);
+	printf ("\n%sA Max = %s%.6g",KGRN,KYEL,minmaxA.max);
+	printf ("\n%sB Min = %s%.6g",KGRN,KYEL,minmaxB.min);
+	printf ("\n%sB Max = %s%.6g\n",KGRN,KYEL,minmaxB.max);
+	printf ("\n%sAVG A = %s%.6g",KGRN,KYEL,avgA);
+	printf ("\n%sAVG B = %s%.6g",KGRN,KYEL,avgB);
+	printf ("\n%sAVG %% Change = %s%.2g%%",KGRN,KYEL,PerDiff(avgA,avgB));
+	if (avgA < avgB) printf (" increase");
+	if (avgA > avgB) printf (" decrease");
+	printf ("\n\n%sSD A = %s%.6g",KGRN,KYEL,SDA);
+	printf ("\n%sSD B = %s%.6g",KGRN,KYEL,SDB);
+	printf ("\n%sSD %% Change = %s%.2g%%",KGRN,KYEL,PerDiff(SDA,SDB));
+	if (SDA < SDB) printf (" increase");
+	if (SDA > SDB) printf (" decrease");
 
-
-
-	printf ("\n*** Welch t-test Unpaired ***");
+	printf ("\n\n%s*** Welch t-test Unpaired ***",KBLU);
 
 	p = PValueUnpaired (bufferA,lastCountA,bufferB,lastCountB);
 
-	printf ("\nP-Value Two Sided = %.6g ",p);
+	printf ("\n%sP-Value Two Sided = %s%.6g ",KGRN,KYEL,p);
 
 	if (avgA <= avgB)
 	{
-		printf ("\nP-Value One Sided A < B = %.6g ", 0.5*p);
-		printf ("\nP-Value One Sided A > B = %.6g ", 1 - 0.5*p);
+		printf ("\n%sP-Value One Sided A < B = %s%.6g ",KGRN,KYEL, 0.5*p);
+		printf ("\n%sP-Value One Sided A > B = %s%.6g ",KGRN,KYEL, 1 - 0.5*p);
 	}
 	else
 	{
-		printf ("\nP-Value One Sided A < B = %.6g ", 1 - 0.5*p);
-		printf ("\nP-Value One Sided A > B = %.6g ", 0.5*p);
+		printf ("\n%sP-Value One Sided A < B = %s%.6g ",KGRN,KYEL, 1 - 0.5*p);
+		printf ("\n%sP-Value One Sided A > B = %s%.6g ",KGRN,KYEL, 0.5*p);
 	}
 
 	if (lastCountA == lastCountB)
 	{
-		printf ("\n\n*** Welch t-test Paired ***");
+		printf ("\n\n%s*** Welch t-test Paired ***", KBLU);
 		
 		p = PValuePaired(bufferA,bufferB,lastCountA);
 	
-		printf ("\nP-Value Two Sided = %.6g ",p);
+		printf ("\n%sP-Value Two Sided = %s%.6g ",KGRN,KYEL,p);
 
 		if (avgA <= avgB)
 		{
-			printf ("\nP-Value One Sided A < B = %.6g ", 0.5*p);
-			printf ("\nP-Value One Sided A > B = %.6g ", 1 - 0.5*p);
+			printf ("\n%sP-Value One Sided A < B = %s%.6g ",KGRN,KYEL, 0.5*p);
+			printf ("\n%sP-Value One Sided A > B = %s%.6g ",KGRN,KYEL, 1 - 0.5*p);
 		}
 		else
 		{
-			printf ("\nP-Value One Sided A < B = %.6g ", 1 - 0.5*p);
-			printf ("\nP-Value One Sided A > B = %.6g ", 0.5*p);
+			printf ("\n%sP-Value One Sided A < B = %s%.6g ",KGRN,KYEL, 1 - 0.5*p);
+			printf ("\n%sP-Value One Sided A > B = %s%.6g ",KGRN,KYEL, 0.5*p);
 		}
 	}
 	
-	printf ("\n\n\n *** Chauvenets Criterion Outlier Removal ***");
+	printf ("\n\n\n\n%s *** Chauvenets Criterion Outlier Removal ***",KRED);
 
-	printf ("\n\nRemoving Outliers from A");
+	printf ("\n\n%sRemoving Outliers from %sA",KMAG,KYEL);
 	lastCountA = RemoveOutliers (bufferA,&bufferAO,lastCountA,0.5);
 	
-	printf ("\n\nRemoving Outliers from B");
+	printf ("\n\n%sRemoving Outliers from %sB",KMAG,KYEL);
 	lastCountB = RemoveOutliers (bufferB,&bufferBO,lastCountB,0.5);
 	
 	/* Show the results */
@@ -444,39 +469,46 @@ int main (int argc, char *argv[])
 	avgB = avg (bufferBO,lastCountB);
 	minmaxA = getMinMax(bufferAO,lastCountA);
 	minmaxB = getMinMax(bufferBO,lastCountB);
+	SDA = SDSamp(bufferAO,lastCountA);
+	SDB = SDSamp(bufferBO,lastCountB);
 	
+	printf ("\n\n%sA Count = %s%d",KGRN,KYEL,lastCountA);
+	printf ("\n%sB Count = %s%d\n",KGRN,KYEL,lastCountB);
+	printf ("\n%sA Min = %s%.6g",KGRN,KYEL,minmaxA.min);
+	printf ("\n%sA Max = %s%.6g",KGRN,KYEL,minmaxA.max);
+	printf ("\n%sB Min = %s%.6g",KGRN,KYEL,minmaxB.min);
+	printf ("\n%sB Max = %s%.6g\n",KGRN,KYEL,minmaxB.max);
+	printf ("\n%sAVG A = %s%.6g",KGRN,KYEL,avgA);
+	printf ("\n%sAVG B = %s%.6g",KGRN,KYEL,avgB);
+	printf ("\n%sAVG %% Change = %s%.2g%%",KGRN,KYEL,PerDiff(avgA,avgB));
+	if (avgA < avgB) printf (" increase");
+	if (avgA > avgB) printf (" decrease");
+	printf ("\n\n%sSD A = %s%.6g",KGRN,KYEL,SDA);
+	printf ("\n%sSD B = %s%.6g",KGRN,KYEL,SDB);
+	printf ("\n%sSD %% Change = %s%.2g%%",KGRN,KYEL,PerDiff(SDA,SDB));
+	if (SDA < SDB) printf (" increase");
+	if (SDA > SDB) printf (" decrease");
 
-	printf ("\n\nA Count = %d",lastCountA);
-	printf ("\nB Count = %d\n",lastCountB);
-	printf ("\nA Min = %.6g", minmaxA.min);
-	printf ("\nA Max = %.6g", minmaxA.max);
-	printf ("\nB Min = %.6g", minmaxB.min);
-	printf ("\nB Max = %.6g\n", minmaxB.max);
-	printf ("\nAVG A = %.6g ",avgA);
-	printf ("\nAVG B = %.6g \n",avgB);
-	printf ("\nSD A = %.6g ",SDSamp(bufferA,lastCountA));
-	printf ("\nSD B = %.6g \n",SDSamp(bufferB,lastCountB));
-
-
-
-	printf ("\n*** Welch t-test Unpaired ***");
+	printf ("\n\n%s*** Welch t-test Unpaired ***",KBLU);
 
 	p = PValueUnpaired (bufferAO,lastCountA,bufferBO,lastCountB);
 
-	printf ("\nP-Value Two Sided = %.6g ",p);
+	printf ("\n%sP-Value Two Sided = %s%.6g ",KGRN,KYEL,p);
 
 	if (avgA <= avgB)
 	{
-		printf ("\nP-Value One Sided A < B = %.6g ", 0.5*p);
-		printf ("\nP-Value One Sided A > B = %.6g ", 1 - 0.5*p);
+		printf ("\n%sP-Value One Sided A < B = %s%.6g ",KGRN,KYEL, 0.5*p);
+		printf ("\n%sP-Value One Sided A > B = %s%.6g ",KGRN,KYEL, 1 - 0.5*p);
 	}
 	else
 	{
-		printf ("\nP-Value One Sided A < B = %.6g ", 1 - 0.5*p);
-		printf ("\nP-Value One Sided A > B = %.6g ", 0.5*p);
+		printf ("\n%sP-Value One Sided A < B = %s%.6g ",KGRN,KYEL, 1 - 0.5*p);
+		printf ("\n%sP-Value One Sided A > B = %s%.6g ",KGRN,KYEL, 0.5*p);
 	}
 
+
 	/* Clean up after ourselves */
+	printf ("%s\n\n", KNRM);
 	free (bufferA);
 	bufferA = NULL;
 
