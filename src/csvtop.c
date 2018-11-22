@@ -5,6 +5,8 @@
 #include <math.h>
 
 #define MAXLOG 7.09782712893383996732E2
+#define Z_MAX 6.0
+#define Z_EPSILON 0.000001
 
 #define KNRM  "\x1B[0m"
 #define KRED  "\x1B[31m"
@@ -63,6 +65,65 @@ double SDSamp(double *buffer, int count)
 	for(i=0; i<count; ++i) standardDeviation += pow(buffer[i] - mean, 2);
 
 	return sqrt(standardDeviation/(count-1));
+}
+
+double poz (double z)
+{
+	double  y, x, w;
+
+	if (z == 0.0)
+                x = 0.0;
+	else
+	{
+		y = 0.5 * fabs (z);
+		if (y >= (Z_MAX * 0.5))
+			x = 1.0;
+		else if (y < 1.0)
+		{
+			w = y*y;
+			x = ((((((((0.000124818987 * w
+					-0.001075204047) * w +0.005198775019) * w
+					-0.019198292004) * w +0.059054035642) * w
+					-0.151968751364) * w +0.319152932694) * w
+					-0.531923007300) * w +0.797884560593) * y * 2.0;
+		}
+		else
+		{
+			y -= 2.0;
+			x = (((((((((((((-0.000045255659 * y
+					+0.000152529290) * y -0.000019538132) * y
+					-0.000676904986) * y +0.001390604284) * y
+					-0.000794620820) * y -0.002034254874) * y
+					+0.006549791214) * y -0.010557625006) * y
+					+0.011630447319) * y -0.009279453341) * y
+					+0.005353579108) * y -0.002141268741) * y
+					+0.000535310849) * y +0.999936657524;
+		}
+	}
+
+	return (z > 0.0 ? ((x + 1.0) * 0.5) : ((1.0 - x) * 0.5));
+}
+
+double critz(double p)
+{
+	double  minz = -Z_MAX;
+	double  maxz = Z_MAX;
+	double  zval = 0.0;
+	double  poz (), pval; 
+
+	if (p <= 0.0 || p >= 1.0) return (0.0);
+
+	while (maxz - minz > Z_EPSILON)
+	{
+		pval = poz (zval);
+		if (pval > p)
+			maxz = zval;
+		else
+			minz = zval;
+		zval = (maxz + minz) * 0.5;
+	}
+
+	return (fabs(zval));
 }
 
 int RemoveOutliers (double *in, double **out, int n, double sensitivity)
@@ -299,6 +360,7 @@ int main (int argc, char *argv[])
 	int countA=0,lastCountA=0;
 	int countB=0,lastCountB=0;
 	double p,avgA,avgB,SDA,SDB,clevel;
+	double sig2P,sig1P;
 	struct pair minmaxA;
 	struct pair minmaxB;
 
@@ -420,6 +482,7 @@ int main (int argc, char *argv[])
 	printf ("\n%sB Max = %s%.6g\n",KGRN,KYEL,minmaxB.max);
 	printf ("\n%sAVG A = %s%.6g",KGRN,KYEL,avgA);
 	printf ("\n%sAVG B = %s%.6g",KGRN,KYEL,avgB);
+	
 	if (avgA < avgB) 
 	{	
 		printf ("\n%sAVG Difference = %s+%.6g",KGRN,KYEL,fabs(avgB-avgA));
@@ -446,13 +509,16 @@ int main (int argc, char *argv[])
 	printf ("\n\n\n%s*** Welch t-test Unpaired ***",KBLU);
 
 	p = PValueUnpaired (bufferA,lastCountA,bufferB,lastCountB);
+	sig2P = critz(p);
+	sig1P = critz(p * 0.5);
 
 	if (p <= clevel) 
 		printf ("\n%sNull Hypothesis is %sFALSE%s for Two Sided test",KGRN,KCYN,KGRN);
 	else
 		printf ("\n%sNull Hypothesis is %sTRUE%s for Two Sided test",KGRN,KCYN,KGRN);
 
-	printf ("\n%sP-Value Two Sided = %s%.6g \n",KGRN,KYEL,p);
+	printf ("\n%sP-Value Two Sided = %s%.6g",KGRN,KYEL,p);
+	printf ("\n%sSigma Level %s %s%3.1f \n",KGRN,(sig2P<5.99)?"=":">",KYEL,sig2P);
 
 	if (avgA < avgB)
 	{
@@ -461,7 +527,8 @@ int main (int argc, char *argv[])
 		else
 			printf ("\n%sNull Hypothesis is %sTRUE%s for One Sided test",KGRN,KCYN,KGRN);
 
-		printf ("\n%sP-Value One Sided A < B = %s%.6g ",KGRN,KYEL, 0.5*p);
+		printf ("\n%sP-Value One Sided A < B = %s%.6g",KGRN,KYEL, 0.5*p);
+		printf ("\n%sSigma Level %s %s%3.1f \n",KGRN,(sig1P<5.99)?"=":">",KYEL,sig1P);
 	}
 	else
 	{
@@ -470,7 +537,8 @@ int main (int argc, char *argv[])
 		else
 			printf ("\n%sNull Hypothesis is %sTRUE%s for One Sided test",KGRN,KCYN,KGRN);
 
-		printf ("\n%sP-Value One Sided A > B = %s%.6g ",KGRN,KYEL, 0.5*p);
+		printf ("\n%sP-Value One Sided A > B = %s%.6g",KGRN,KYEL, 0.5*p);
+		printf ("\n%sSigma Level %s %s%3.1f \n",KGRN,(sig1P<5.99)?"=":">",KYEL,sig1P);
 	}
 
 	if (lastCountA == lastCountB)
@@ -478,13 +546,16 @@ int main (int argc, char *argv[])
 		printf ("\n\n\n%s*** Welch t-test Paired ***", KBLU);
 		
 		p = PValuePaired(bufferA,bufferB,lastCountA);
-	
+		sig2P = critz(p);
+		sig1P = critz(p * 0.5);
+
 		if (p <= clevel) 
 			printf ("\n%sNull Hypothesis is %sFALSE%s for Two Sided test",KGRN,KCYN,KGRN);
 		else
 			printf ("\n%sNull Hypothesis is %sTRUE%s for Two Sided test",KGRN,KCYN,KGRN);
 
-		printf ("\n%sP-Value Two Sided = %s%.6g \n",KGRN,KYEL,p);
+		printf ("\n%sP-Value Two Sided = %s%.6g",KGRN,KYEL,p);
+		printf ("\n%sSigma Level %s %s%3.1f \n",KGRN,(sig2P<5.99)?"=":">",KYEL,sig2P);
 
 		if (avgA < avgB)
 		{
@@ -493,7 +564,8 @@ int main (int argc, char *argv[])
 			else
 				printf ("\n%sNull Hypothesis is %sTRUE%s for One Sided test",KGRN,KCYN,KGRN);
 
-			printf ("\n%sP-Value One Sided A < B = %s%.6g ",KGRN,KYEL, 0.5*p);
+			printf ("\n%sP-Value One Sided A < B = %s%.6g",KGRN,KYEL, 0.5*p);
+			printf ("\n%sSigma Level %s %s%3.1f \n",KGRN,(sig1P<5.99)?"=":">",KYEL,sig1P);
 		}
 		else
 		{
@@ -502,7 +574,8 @@ int main (int argc, char *argv[])
 			else
 				printf ("\n%sNull Hypothesis is %sTRUE%s for One Sided test",KGRN,KCYN,KGRN);
 
-			printf ("\n%sP-Value One Sided A > B = %s%.6g ",KGRN,KYEL, 0.5*p);
+			printf ("\n%sP-Value One Sided A > B = %s%.6g",KGRN,KYEL, 0.5*p);
+			printf ("\n%sSigma Level %s %s%3.1f \n",KGRN,(sig1P<5.99)?"=":">",KYEL,sig1P);
 		}
 	}
 	
@@ -530,6 +603,7 @@ int main (int argc, char *argv[])
 	printf ("\n%sB Max = %s%.6g\n",KGRN,KYEL,minmaxB.max);
 	printf ("\n%sAVG A = %s%.6g",KGRN,KYEL,avgA);
 	printf ("\n%sAVG B = %s%.6g",KGRN,KYEL,avgB);
+
 	if (avgA < avgB) 
 	{	
 		printf ("\n%sAVG Difference = %s+%.6g",KGRN,KYEL,fabs(avgB-avgA));
@@ -557,13 +631,17 @@ int main (int argc, char *argv[])
 	printf ("\n\n\n%s*** Welch t-test Unpaired ***",KBLU);
 
 	p = PValueUnpaired (bufferAO,lastCountA,bufferBO,lastCountB);
+	sig2P = critz(p);
+	sig1P = critz(p * 0.5);
+
 
 	if (p <= clevel) 
 		printf ("\n%sNull Hypothesis is %sFALSE%s for Two Sided test",KGRN,KCYN,KGRN);
 	else
 		printf ("\n%sNull Hypothesis is %sTRUE%s for Two Sided test",KGRN,KCYN,KGRN);
 
-	printf ("\n%sP-Value Two Sided = %s%.6g \n",KGRN,KYEL,p);
+	printf ("\n%sP-Value Two Sided = %s%.6g",KGRN,KYEL,p);
+	printf ("\n%sSigma Level %s %s%3.1f \n",KGRN,(sig2P<5.99)?"=":">",KYEL,sig2P);
 
 	if (avgA < avgB)
 	{
@@ -572,7 +650,8 @@ int main (int argc, char *argv[])
 		else
 			printf ("\n%sNull Hypothesis is %sTRUE%s for One Sided test",KGRN,KCYN,KGRN);
 
-		printf ("\n%sP-Value One Sided A < B = %s%.6g ",KGRN,KYEL, 0.5*p);
+		printf ("\n%sP-Value One Sided A < B = %s%.6g",KGRN,KYEL, 0.5*p);
+		printf ("\n%sSigma Level %s %s%3.1f \n",KGRN,(sig1P<5.99)?"=":">",KYEL,sig1P);
 	}
 	else
 	{
@@ -581,7 +660,8 @@ int main (int argc, char *argv[])
 		else
 			printf ("\n%sNull Hypothesis is %sTRUE%s for One Sided test",KGRN,KCYN,KGRN);
 
-		printf ("\n%sP-Value One Sided A > B = %s%.6g ",KGRN,KYEL, 0.5*p);
+		printf ("\n%sP-Value One Sided A > B = %s%.6g",KGRN,KYEL, 0.5*p);
+		printf ("\n%sSigma Level %s %s%3.1f \n",KGRN,(sig1P<5.99)?"=":">",KYEL,sig1P);
 	}
 
 
