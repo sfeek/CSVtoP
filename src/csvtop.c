@@ -363,6 +363,8 @@ int main (int argc, char *argv[])
 	double sig2P,sig1P;
 	struct pair minmaxA;
 	struct pair minmaxB;
+	double Z;
+	double cuA,clA,cuB,clB;
 
 	if (argc != 4)
 	{
@@ -464,12 +466,19 @@ int main (int argc, char *argv[])
 	fclose (in);
 
 	/* Show the results */
+	Z = critz(clevel/2);
 	avgA = avg (bufferA,lastCountA);
 	avgB = avg (bufferB,lastCountB);
 	minmaxA = getMinMax(bufferA,lastCountA);
 	minmaxB = getMinMax(bufferB,lastCountB);
 	SDA = SDSamp(bufferA,lastCountA);
 	SDB = SDSamp(bufferB,lastCountB);
+
+	cuA = avgA + Z * (SDA / sqrt(countA));
+	clA = avgA - Z * (SDA / sqrt(countA));
+	cuB = avgB + Z * (SDB / sqrt(countB));
+	clB = avgB - Z * (SDB / sqrt(countB));
+
 
 	printf ("\n\n\n%sP-Value criteria for FALSE null hypothesis < %s%.6g",KCYN,KYEL,clevel);	
 	printf ("\n\n%s *** Raw Data ***",KRED);
@@ -493,6 +502,10 @@ int main (int argc, char *argv[])
 		printf ("\n%sAVG Difference = %s-%.6g",KGRN,KYEL,fabs(avgB-avgA));
 		printf ("\n%sAVG %% Change = %s-%.2g%%",KGRN,KYEL,PerDiff(avgA,avgB));
 	}
+
+	printf ("\n\n%sA %.2g%% CI = %s %.6g - %.6g", KGRN,(1.0-clevel)*100,KYEL,clA,cuA);
+  	printf ("\n%sB %.2g%% CI = %s %.6g - %.6g", KGRN,(1.0-clevel)*100,KYEL,clB,cuB);
+  	
 	printf ("\n\n%sSD A = %s%.6g",KGRN,KYEL,SDA);
 	printf ("\n%sSD B = %s%.6g",KGRN,KYEL,SDB);
 	if (SDA < SDB) 
@@ -595,6 +608,13 @@ int main (int argc, char *argv[])
 	SDA = SDSamp(bufferAO,lastCountA);
 	SDB = SDSamp(bufferBO,lastCountB);
 	
+	cuA = avgA + Z * (SDA / sqrt(countA));
+	clA = avgA - Z * (SDA / sqrt(countA));
+	cuB = avgB + Z * (SDB / sqrt(countB));
+	clB = avgB - Z * (SDB / sqrt(countB));
+
+
+
 	printf ("\n\n%sA Count = %s%d",KGRN,KYEL,lastCountA);
 	printf ("\n%sB Count = %s%d\n",KGRN,KYEL,lastCountB);
 	printf ("\n%sA Min = %s%.6g",KGRN,KYEL,minmaxA.min);
@@ -614,6 +634,10 @@ int main (int argc, char *argv[])
 		printf ("\n%sAVG Difference = %s-%.6g",KGRN,KYEL,fabs(avgB-avgA));
 		printf ("\n%sAVG %% Change = %s-%.2g%%",KGRN,KYEL,PerDiff(avgA,avgB));
 	}
+	
+	printf ("\n\n%sA %.2g%% CI = %s %.6g - %.6g", KGRN,(1.0-clevel)*100,KYEL,clA,cuA);
+  	printf ("\n%sB %.2g%% CI = %s %.6g - %.6g", KGRN,(1.0-clevel)*100,KYEL,clB,cuB);
+  	
 	printf ("\n\n%sSD A = %s%.6g",KGRN,KYEL,SDA);
 	printf ("\n%sSD B = %s%.6g",KGRN,KYEL,SDB);
 	if (SDA < SDB) 
@@ -633,7 +657,6 @@ int main (int argc, char *argv[])
 	p = PValueUnpaired (bufferAO,lastCountA,bufferBO,lastCountB);
 	sig2P = critz(p);
 	sig1P = critz(p * 0.5);
-
 
 	if (p <= clevel) 
 		printf ("\n%sNull Hypothesis is %sFALSE%s for Two Sided test",KGRN,KCYN,KGRN);
@@ -663,7 +686,6 @@ int main (int argc, char *argv[])
 		printf ("\n%sP-Value One Sided A > B = %s%.6g",KGRN,KYEL, 0.5*p);
 		printf ("\n%sSigma Level %s %s%3.1f \n",KGRN,(sig1P<5.99)?"=":">",KYEL,sig1P);
 	}
-
 
 
 	/* Clean up after ourselves */
