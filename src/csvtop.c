@@ -3,19 +3,32 @@
 #include <string.h>
 #include <CSVLib.h>
 #include <math.h>
+#include <assert.h>
 
 #define MAXLOG 7.09782712893383996732E2
 #define Z_MAX 6.0
 #define Z_EPSILON 0.000001
+#define MIN_CHUNK 64
 
-#define KNRM  "\x1B[0m"
-#define KRED  "\x1B[31m"
-#define KGRN  "\x1B[32m"
-#define KYEL  "\x1B[33m"
-#define KBLU  "\x1B[34m"
-#define KMAG  "\x1B[35m"
-#define KCYN  "\x1B[36m"
-#define KWHT  "\x1B[37m"
+#ifdef _WIN32
+	#define KNRM  " "
+	#define KRED  " "
+	#define KGRN  " "
+	#define KYEL  " "
+	#define KBLU  " "
+	#define KMAG  " "
+	#define KCYN  " "
+	#define KWHT  " "
+#else
+	#define KNRM  "\x1B[0m"
+	#define KRED  "\x1B[31m"
+	#define KGRN  "\x1B[32m"
+	#define KYEL  "\x1B[33m"
+	#define KBLU  "\x1B[34m"
+	#define KMAG  "\x1B[35m"
+	#define KCYN  "\x1B[36m"
+	#define KWHT  "\x1B[37m"
+#endif
 
 struct pair
 {
@@ -283,6 +296,7 @@ double PValueUnpaired (double *array1, const size_t array1_size, double *array2,
 	usv2 = usv2 / (array2_size - 1);
 	const double welch_t_statistic = (fmean1 - fmean2) / sqrt (usv1 / array1_size + usv2 / array2_size);
 	const double dof = pow ((usv1 / array1_size + usv2 / array2_size), 2.0) / ((usv1 * usv1) / (array1_size * array1_size * (array1_size - 1)) + (usv2 * usv2) / (array2_size * array2_size * (array2_size - 1)));
+
 	return PfromT (welch_t_statistic, dof);
 }
 
@@ -306,6 +320,7 @@ double PValuePaired (double *array1, double *array2, const size_t array_size)
 	std = SDPop (ABdiff, array_size);
 	welch_t_statistic = mean / (std / sqrt (array_size - 1));
 	free (ABdiff);
+
 	return PfromT (welch_t_statistic, dof);
 }
 
@@ -361,6 +376,75 @@ struct pair getMinMax (double arr[], int n)
 	return minmax;
 }
 
+static int getstr(char **lineptr, size_t *n, FILE *stream,
+		  char terminator, size_t offset)
+{
+	int nchars_avail;
+	char *read_pos;
+	int ret;
+
+	if (!lineptr || !n || !stream)
+		return -1;
+
+	if (!*lineptr) 
+	{
+		*n = MIN_CHUNK;
+		*lineptr = malloc(*n);
+		if (!*lineptr)
+			return -1;
+	}
+
+	nchars_avail = *n - offset;
+	read_pos = *lineptr + offset;
+
+	for (;;) 
+	{
+		int c = getc(stream);
+
+		assert(*n - nchars_avail == read_pos - *lineptr);
+		if (nchars_avail < 2) 
+		{
+			if (*n > MIN_CHUNK)
+				*n *= 2;
+			else
+				*n += MIN_CHUNK;
+
+			nchars_avail = *n + *lineptr - read_pos;
+			*lineptr = realloc(*lineptr, *n);
+		
+			if (!*lineptr)
+				return -1;
+		
+			read_pos = *n - nchars_avail + *lineptr;
+			assert(*n - nchars_avail == read_pos - *lineptr);
+		}
+
+		if (c == EOF || ferror (stream)) 
+		{
+			if (read_pos == *lineptr)
+				return -1;
+			else
+				break;
+		}
+
+		*read_pos++ = c;
+		nchars_avail--;
+
+		if (c == terminator)
+			break;
+	}
+
+	*read_pos = '\0';
+
+	ret = read_pos - (*lineptr + offset);
+	return ret;
+}
+
+int readline (char **lineptr, size_t *n, FILE *stream)
+{
+	return getstr(lineptr, n, stream, '\n', 0);
+}
+
 int main (int argc, char *argv[])
 {
 	char **parsed = NULL;
@@ -405,8 +489,9 @@ int main (int argc, char *argv[])
 	if (in == NULL)
 		exit (EXIT_FAILURE);
 
+
 	/* Read each line */
-	while ((read = getline (&line, &len, in)) != -1)
+	while ((read = readline (&line, &len, in)) != -1)
 	{
 		/* Parse it! */
 		if (! (parsed = CSVParse (line, &numberOfFields)))
@@ -447,7 +532,7 @@ int main (int argc, char *argv[])
 		exit (EXIT_FAILURE);
 
 	/* Read each line */
-	while ((read = getline (&line, &len, in)) != -1)
+	while ((read = readline (&line, &len, in)) != -1)
 	{
 		/* Parse it! */
 		if (! (parsed = CSVParse (line, &numberOfFields)))
