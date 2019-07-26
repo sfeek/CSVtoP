@@ -1,6 +1,13 @@
 # CSVtoP
-Perform Statistical t-Test with p-Values from two CSV files.
 
-Usage: csvtop <confidence_level> <fileA.csv> <fileB.csv>
+To compile: ./build.sh 
 
-To compile: make
+
+Perform One Sample Statistical t-Test with p-values from a hypothesised mean and one CSV file.
+
+Usage: csvtopone <confidence_level> <mean> <file.csv>
+
+
+Perform Two Sample Statistical t-Test with p-Values from two CSV files.
+
+Usage: csvtoptwo <confidence_level> <fileA.csv> <fileB.csv>

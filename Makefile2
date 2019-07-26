@@ -26,7 +26,7 @@ LFLAGS = -L../lib
 LIBS =  -lm
 
 # define the C source files
-SRCS = src/csvtop.c src/CSVLib.c
+SRCS = src/csvtopone.c src/CSVLib.c
 
 # define the C object files 
 #
@@ -39,7 +39,7 @@ SRCS = src/csvtop.c src/CSVLib.c
 OBJS = $(SRCS:.c=.o)
 
 # define the executable file 
-MAIN = csvtop
+MAIN = csvtopone
 
 #
 # The following part of the makefile is generic; it can be used to 
