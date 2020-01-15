@@ -312,13 +312,13 @@ int RemoveOutliersPaired(double *inp1, double **out1, double *inp2, double **out
 
 				if (testa < sensitivity || testb < sensitivity)
 				{
-						printf ("\n%sThrew out pair #%d -> %s%.6g , %.6g", KGRN, i + 1, KYEL, inp1[i], inp2[i]);
+					printf ("\n%sThrew out pair #%d -> %s%.6g , %.6g", KGRN, i + 1, KYEL, inp1[i], inp2[i]);
 				}
 				else
 				{
-						(*out1)[c] = inp1[i];
-						(*out2)[c] = inp2[i];
-						c++;
+					(*out1)[c] = inp1[i];
+					(*out2)[c] = inp2[i];
+					c++;
 				}
 		}
 
