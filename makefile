@@ -9,7 +9,7 @@
 CC = gcc
 
 # define any compile-time flags
-CFLAGS = -Wall -g -O3
+CFLAGS = -Wall -g -ggdb -O0
 
 # define any directories containing header files other than /usr/include
 #
@@ -26,7 +26,7 @@ LFLAGS = -L../lib
 LIBS =  -lm
 
 # define the C source files
-SRCS = src/csvtopone.c src/CSVLib.c
+SRCS = src/csvtop.c src/CSVLib.c
 
 # define the C object files 
 #
@@ -39,7 +39,7 @@ SRCS = src/csvtopone.c src/CSVLib.c
 OBJS = $(SRCS:.c=.o)
 
 # define the executable file 
-MAIN = csvtopone
+MAIN = csvtop
 
 #
 # The following part of the makefile is generic; it can be used to 
