@@ -1,13 +1,14 @@
 # CSVtoP
 
-To compile: ./build.sh 
+To compile: make
+
+./csvtop <parameters> <file1> [<file2>]
+
+Parameters:
+    -p          Paired Data (Must have equal number of records in each file)
+    -c <level>  Confidence Level (0-100)
+    -f          Filter data using Chauvenet Outlier Removal before running test
+    -m <mean>   Predicted mean value for one sample test
 
 
-Perform One Sample Statistical t-Test with p-values from a hypothesised mean and one CSV file.
 
-Usage: csvtopone <confidence_level> <hyp_mean> <file.csv>
-
-
-Perform Two Sample Statistical t-Test with p-Values from two CSV files.
-
-Usage: csvtoptwo <confidence_level> <fileA.csv> <fileB.csv>
