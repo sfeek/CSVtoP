@@ -643,6 +643,18 @@ int parsecmdline(struct cmdparams *cmdparams,int c, char*v[])
 	cmdparams->clevel = .05;
 	cmdparams->fname1 = NULL;
 	cmdparams->fname2 = NULL;
+
+	if (c < 2)
+	{
+		printf("\n\n./csvtop <parameters> <file1> [<file2>]\n");
+		printf("\nParameters:");
+		printf("\n    -p          Paired Data (Must have equal number of records in each file)");
+		printf("\n    -c <level>  Confidence Level (0-100)");
+		printf("\n    -f          Filter data using Chauvenet Outlier Removal before running test");
+		printf("\n    -m <mean>   Predicted mean value for one sample test");
+		
+		return -1;
+	}
 			
 	for (x=1;x<c;x++)
 	{
