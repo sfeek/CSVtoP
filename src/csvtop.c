@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <CSVLib.h>
+#include "../include/CSVLib.h"
 #include <math.h>
 #include <assert.h>
 
@@ -730,7 +730,7 @@ int OneSample(char* fname1, double clevel, double mean, int filter)
 	FILE *in;
 	int i, err = -1;;
 	size_t len = 0;
-	ssize_t read;
+	size_t read;
 	double *bufferA = NULL;
 	double *bufferAO = NULL;
 	int countA = 0, lastCountA = 0;
@@ -885,7 +885,7 @@ int TwoSample(char* fname1, char* fname2, double clevel, int filter, int paired)
 	FILE *in;
 	int i, err = -1;;
 	size_t len = 0;
-	ssize_t read;
+	size_t read;
 	double *bufferA = NULL;
 	double *bufferAO = NULL;
 	double *bufferB = NULL;
