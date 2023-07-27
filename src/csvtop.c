@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../include/CSVLib.h"
+#include "../include/ghcommon.h"
 #include <math.h>
 #include <assert.h>
 
@@ -45,24 +45,6 @@ struct cmdparams
 	char *fname1;
 	char *fname2;
 };
-
-void array_sort(double *array , int n)
-{
-	int i,j,temp;
-
-	for(i=0 ; i<n ; i++)
-	{
-		for(j=0 ; j<n-1 ; j++)
-		{
-			if(array[j]>array[j+1])
-			{
-				temp = array[j];
-				array[j] = array[j+1];
-				array[j+1] = temp;
-			}
-		}
-	}
-}
 
 double PerDiff (double f, double s)
 {
@@ -750,7 +732,7 @@ int OneSample(char* fname1, double clevel, double mean, int filter)
 
 	while ((read = readline (&line, &len, in)) != -1)
 	{
-		if (!(parsed = CSVParse (line, &numberOfFields)))
+		if (csv_parse (&parsed, line, &numberOfFields))
 		{
 			printf ("String parsing failed!\n");
 			goto fail;
@@ -768,7 +750,7 @@ int OneSample(char* fname1, double clevel, double mean, int filter)
 			bufferA[i] = atof (parsed[i - lastCountA]);
 		} 
 
-  	cleanupStrings (parsed, numberOfFields);
+  	cleanup_csv_strings (parsed, numberOfFields);
 
 		lastCountA = countA;
 	}
@@ -906,7 +888,7 @@ int TwoSample(char* fname1, char* fname2, double clevel, int filter, int paired)
 
 	while ((read = readline (&line, &len, in)) != -1)
 	{
-		if (!(parsed = CSVParse (line, &numberOfFields)))
+		if (csv_parse(&parsed,line, &numberOfFields))
 		{
 			printf ("String parsing failed!\n");
 			goto fail;
@@ -924,7 +906,7 @@ int TwoSample(char* fname1, char* fname2, double clevel, int filter, int paired)
 			bufferA[i] = atof (parsed[i - lastCountA]);
 		} 
 
-		cleanupStrings (parsed, numberOfFields);
+		cleanup_csv_strings (parsed, numberOfFields);
 
 		lastCountA = countA;
 	}
@@ -938,7 +920,7 @@ int TwoSample(char* fname1, char* fname2, double clevel, int filter, int paired)
 
 	while ((read = readline (&line, &len, in)) != -1)
 	{
-		if (!(parsed = CSVParse (line, &numberOfFields)))
+		if (csv_parse (&parsed,line, &numberOfFields))
 		{
 			printf ("String parsing failed!\n");
 			goto fail;
@@ -956,7 +938,7 @@ int TwoSample(char* fname1, char* fname2, double clevel, int filter, int paired)
 			bufferB[i] = atof (parsed[i - lastCountB]);
 		} 
 
-		cleanupStrings (parsed, numberOfFields);
+		cleanup_csv_strings (parsed, numberOfFields);
 
 		lastCountB = countB;
 	}

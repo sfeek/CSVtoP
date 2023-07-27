@@ -26,7 +26,7 @@ LFLAGS = -L../lib
 LIBS =  -lm
 
 # define the C source files
-SRCS = src/csvtop.c src/CSVLib.c
+SRCS = src/csvtop.c src/ghcommon.c
 
 # define the C object files 
 #
